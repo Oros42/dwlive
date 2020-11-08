@@ -1,0 +1,6 @@
+#!/bin/bash
+os_version="buster"
+livework="./livework/"
+repositories="http://ftp.debian.org/debian/"
+dist_name="dwlive"
+iso_name="dwlive-Debian-amd64.iso"

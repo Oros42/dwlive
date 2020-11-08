@@ -1,0 +1,8 @@
+*
+!.gitignore
+!LICENSE
+!README.md
+!config.dist
+!chroot_files
+!iso_files
+!make_iso.sh
