@@ -60,3 +60,6 @@ Boot the computer on the usb stick.
 Valide questions about the key board. If you didn't know the answer, just press enter.  
 At the question «Please choose an operation», select 1.  
 Then enter the code given by your IT support (like 123-456-789).  
+
+## TODO
+- UEFI support
