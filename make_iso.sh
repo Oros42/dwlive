@@ -1,6 +1,6 @@
 #!/bin/bash
 # author : Oros
-# 2020-11-07
+# 2020-11-14
 #
 # This script create a light Debian ISO which include dwagent (https://www.dwservice.net/)
 
@@ -41,17 +41,21 @@ fi
 home_project=$(pwd)
 chroot_files="$home_project/chroot_files"
 iso_files="$home_project/iso_files"
-mkdir -p $livework
-cd $livework
+mkdir -p "$livework"
+cd "$livework"
+
+rm -fr chroot
+rm -fr iso
+rm -fr tmp
 
 # build OS
-rm -fr chroot
 debootstrap --arch=amd64 $os_version chroot $repositories
 
 # configure the OS
-cp -r $chroot_files/* chroot/
+cp -r "$chroot_files"/* chroot/
 chmod +x chroot/install_in_chroot.sh
 echo "${dist_name}" > chroot/etc/hostname
+dbus-uuidgen > chroot/etc/machine-id
 
 chroot chroot /install_in_chroot.sh
 
@@ -59,40 +63,58 @@ chroot chroot /install_in_chroot.sh
 rm -r chroot/install_in_chroot.sh
 rm -r chroot/tmp/*
 rm -f chroot/root/.keyboard_ok
+rm -rf chroot/root/.bash_history
+
+mkdir -p {iso/{EFI/boot,boot/grub/x86_64-efi,isolinux,live},tmp}
 
 # make filesystem.squashfs
-mkdir -p binary/{live,isolinux}
-cp $(ls chroot/boot/vmlinuz* |sort --version-sort -f|tail -n1) binary/live/vmlinuz
-cp $(ls chroot/boot/initrd* |sort --version-sort -f|tail -n1) binary/live/initrd
-if [ -f binary/live/filesystem.squashfs ]; then rm binary/live/filesystem.squashfs; fi
-mksquashfs chroot binary/live/filesystem.squashfs -comp xz
+mksquashfs chroot iso/live/filesystem.squashfs -e boot
 
-# copy boot files
-isohdpfx_path=/usr/lib/syslinux/isohdpfx.bin
-if [ -f /usr/lib/syslinux/isolinux.bin ]; then
-	cp /usr/lib/syslinux/isolinux.bin binary/isolinux/
-elif [ -f /usr/lib/ISOLINUX/isolinux.bin ]; then
-	cp /usr/lib/ISOLINUX/isolinux.bin binary/isolinux/
-	isohdpfx_path=/usr/lib/ISOLINUX/isohdpfx.bin
-fi
 
-if [ ! -f $isohdpfx_path ]; then
-	echo -e "\033[31m${isohdpfx_path} not found!\033[0m" 1>&2
-	exit 1
-fi
+touch iso/DWLIVE_DEBIAN
+cp chroot/boot/vmlinuz*amd64 iso/live/vmlinuz
+cp chroot/boot/initrd.img-*amd64 iso/live/initrd
+cp -r $iso_files/iso/* iso/
+cp /usr/lib/ISOLINUX/isolinux.bin iso/isolinux/
+cp /usr/lib/syslinux/modules/bios/* iso/isolinux/
+cp -r /usr/lib/grub/x86_64-efi/* iso/boot/grub/x86_64-efi/
 
-if [ -d /usr/lib/syslinux/modules/bios/ ]; then
-	cp /usr/lib/syslinux/modules/bios/{ldlinux.c32,libcom32.c32,libutil.c32,vesamenu.c32} binary/isolinux/
-else
-	echo -e "\033[31m/usr/lib/syslinux/modules/bios/ not found!\033[0m" 1>&2
-	exit 1
-fi
 
-cp $iso_files/{splash.png,isolinux.cfg} binary/isolinux/
+grub-mkstandalone \
+    --format=x86_64-efi \
+    --output=tmp/bootx64.efi \
+    --locales="" \
+    --fonts="" \
+    "boot/grub/grub.cfg=${iso_files}/grub-standalone.cfg"
 
-# make iso
-if [ -f "${iso_name}" ]; then rm "${iso_name}"; fi
-xorriso -as mkisofs -r -J -joliet-long -l -cache-inodes -isohybrid-mbr $isohdpfx_path -partition_offset 16 -A "${dist_name}"  -b isolinux/isolinux.bin -c isolinux/boot.cat -no-emul-boot -boot-load-size 4 -boot-info-table -o "${home_project}/${iso_name}" binary
+cd iso/EFI/boot
+dd if=/dev/zero of=efiboot.img bs=1M count=20
+mkfs.vfat efiboot.img
+mmd -i efiboot.img efi efi/boot
+mcopy -vi efiboot.img $livework/tmp/bootx64.efi ::efi/boot/
+
+cd $livework
+
+# build ISO
+if [ -f "${home_project}/${iso_name}" ]; then rm "${home_project}/${iso_name}"; fi
+xorriso \
+    -as mkisofs \
+    -iso-level 3 \
+    -o "${home_project}/${iso_name}" \
+    -full-iso9660-filenames \
+    -volid "DWLIVE_DEBIAN" \
+    -isohybrid-mbr /usr/lib/ISOLINUX/isohdpfx.bin \
+    -eltorito-boot \
+        isolinux/isolinux.bin \
+        -no-emul-boot \
+        -boot-load-size 4 \
+        -boot-info-table \
+        --eltorito-catalog isolinux/isolinux.cat \
+    -eltorito-alt-boot \
+        -e /EFI/boot/efiboot.img \
+        -no-emul-boot \
+        -isohybrid-gpt-basdat \
+    -append_partition 2 0xef ${livework}/iso/EFI/boot/efiboot.img \
+    "${livework}/iso"
 
 echo "ISO build in ${home_project}/${iso_name}"
-

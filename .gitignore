@@ -5,6 +5,8 @@
 !/config.dist
 !/chroot_files
 !/chroot_files/*
+!/chroot_files/**/*
 !/iso_files
 !/iso_files/*
+!/iso_files/iso/**/*
 !/make_iso.sh

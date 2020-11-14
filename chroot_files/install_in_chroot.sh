@@ -19,9 +19,7 @@ set -euo pipefail
 
 apt update
 apt upgrade -y
-apt install -y linux-image-amd64
-apt install -y live-boot
-cp /usr/sbin/update-initramfs.orig.initramfs-tools /usr/sbin/update-initramfs
+apt install -y --no-install-recommends linux-image-amd64 live-boot systemd-sysv
 sed -i "s|KEYMAP=n|KEYMAP=y|" /etc/initramfs-tools/initramfs.conf
 update-initramfs -u
 
@@ -35,7 +33,7 @@ ExecStart=-/sbin/agetty --autologin root --noclear %I 38400 linux
 " > /etc/systemd/system/getty@tty1.service.d/override.conf
 systemctl enable getty@tty1.service
 
-apt install -y wget systemd-container xterm expect console-setup keyboard-configuration lvm2 htop xinit x11-xserver-utils
+apt install -y wget systemd-container xterm expect console-setup keyboard-configuration lvm2 htop xinit x11-xserver-utils cryptsetup
 
 echo "
 if [ ! -f ~/.setup_ok ]; then
@@ -55,6 +53,7 @@ wget https://www.dwservice.net/download/dwagent_x86.sh
 chmod +x dwagent_x86.sh
 
 set +e
+#FIXME not realy good but didn't find better
 { echo -e "1\r"; sleep 2; echo -e "\r"; sleep 1; echo -e "1\r";  sleep 20; killall dwagent;} | ./dwagent_x86.sh
 set -e
 
