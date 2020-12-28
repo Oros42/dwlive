@@ -5,7 +5,7 @@ Make a live CD Debian with dwagent (https://www.dwservice.net/)
 
 ### Install
 ```
-sudo apt install debootstrap xorriso live-build syslinux squashfs-tools
+sudo apt install debootstrap xorriso live-build syslinux squashfs-tools isolinux
 ```
 ### Make
 ```
