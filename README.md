@@ -5,8 +5,13 @@ Make a live CD Debian with dwagent (https://www.dwservice.net/)
 
 ### Install
 ```
-sudo apt install debootstrap xorriso live-build syslinux squashfs-tools isolinux
+sudo apt install debootstrap xorriso live-build syslinux squashfs-tools isolinux grub-efi-amd64-bin
 ```
+```
+cp config.dist config
+```
+Change `livework` and `os_version` to your needs.  
+
 ### Make
 ```
 sudo ./make_iso.sh

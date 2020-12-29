@@ -1,6 +1,6 @@
 #!/bin/bash
 # author : Oros
-# 2020-11-14
+# 2020-12-29
 #
 # This script create a light Debian ISO which include dwagent (https://www.dwservice.net/)
 
@@ -20,22 +20,6 @@ fi
 if [ "$EUID" -ne 0 ]; then 
 	echo -e "\033[31mPlease run as root\033[0m" 1>&2
 	exit 1
-fi
-
-if [ ! `which debootstrap` ]; then
-	apt-get install -y debootstrap
-fi
-if [ ! `which xorriso` ]; then
-	apt-get install -y xorriso
-fi
-if [ ! `which live-build` ]; then
-	apt-get install -y live-build
-fi
-if [ ! `which syslinux` ]; then
-	apt-get install -y syslinux
-fi
-if [ ! `which mksquashfs` ]; then
-	apt-get install -y squashfs-tools
 fi
 
 home_project=$(pwd)
@@ -118,3 +102,4 @@ xorriso \
     "${livework}/iso"
 
 echo "ISO build in ${home_project}/${iso_name}"
+sudo chown $USER: "${home_project}/${iso_name}"
