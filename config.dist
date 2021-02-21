@@ -1,6 +1,11 @@
 #!/bin/bash
 os_version="buster"
 livework="/opt/livework/"
-repositories="http://ftp.debian.org/debian/"
+repositories="http://ftp.debian.org/debian"
+
+# Temporary proxy used during make
+repositoriesProxy=""
+#repositoriesProxy="http://myproxy.lan:3142"
+
 dist_name="dwlive"
 iso_name="dwlive-Debian-amd64.iso"

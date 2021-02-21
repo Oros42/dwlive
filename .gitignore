@@ -10,3 +10,4 @@
 !/iso_files/*
 !/iso_files/iso/**/*
 !/make_iso.sh
+chroot_files/root/dwagent_x86.sh
